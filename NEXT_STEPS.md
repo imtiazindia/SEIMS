@@ -100,7 +100,7 @@ python create_admin.py
 INSERT INTO users (email, password_hash, name, role, is_active, created_at)
 VALUES (
     'admin@seims.edu',
-    '$2b$12$...',  -- Replace with bcrypt hash of your password
+    '$2a$12$IPQtGGaWxJ01qHzSA4eLreBHMESAK2OC1cTw2ZRyAX8/QUkDWSPmq',  -- Replace with bcrypt hash of your password
     'System Administrator',
     'admin',
     true,
