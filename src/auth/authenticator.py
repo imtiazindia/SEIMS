@@ -37,6 +37,9 @@ def authenticate_user(email: str, password: str) -> dict:
                     'name': user.name
                 }
             return None
+    except ConnectionError as e:
+        st.error(f"Database Connection Error\n\n{str(e)}\n\nPlease check TROUBLESHOOTING_CONNECTION.md for help.")
+        return None
     except Exception as e:
         st.error(f"Authentication error: {str(e)}")
         return None
