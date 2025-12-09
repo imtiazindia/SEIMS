@@ -9,7 +9,10 @@ psycopg2-binary>=2.9.9
 alembic>=1.12.1
 
 # Authentication & Security
-bcrypt>=4.1.1
+# Note: passlib 1.7.x is not fully compatible with bcrypt 4.x.
+# Pin bcrypt to <4 to avoid runtime errors like
+# "password cannot be longer than 72 bytes" and invalid hash issues.
+bcrypt>=3.2,<4
 python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 
