@@ -55,18 +55,19 @@ def test_connection():
         
         with get_db_session() as session:
             # Test query
-            result = session.execute("SELECT version();")
+            from sqlalchemy import text
+            result = session.execute(text("SELECT version();"))
             version = result.scalar()
             print(f"\n✅ SUCCESS! Connected to database")
             print(f"   PostgreSQL version: {version.split(',')[0]}")
             
             # Test if tables exist
-            result = session.execute("""
+            result = session.execute(text("""
                 SELECT table_name 
                 FROM information_schema.tables 
                 WHERE table_schema = 'public'
                 LIMIT 5;
-            """)
+            """))
             tables = [row[0] for row in result]
             
             if tables:
