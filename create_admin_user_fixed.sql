@@ -14,7 +14,7 @@
 INSERT INTO users (email, password_hash, name, role, is_active, created_at)
 VALUES (
     'imtiyaz@rckr.com',
-    '$$2a$12$IPQtGGaWxJ01qHzSA4eLreBHMESAK2OC1cTw2ZRyAX8/QUkDWSPmq',  -- REPLACE THIS with your bcrypt hash from bcrypt-generator.com
+    '$2b$12$fPUU46cHSpV/pNQRFTQ3GOFSodfEyhmVZtzE8RLV8OkA./GmPPFMq',  -- REPLACE THIS with your bcrypt hash from bcrypt-generator.com
     'System Administrator',
     'admin',
     true,
