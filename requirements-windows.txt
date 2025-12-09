@@ -1,0 +1,56 @@
+# Core Dependencies
+streamlit>=1.28.0
+streamlit-authenticator>=0.2.3
+streamlit-option-menu>=0.3.6
+
+# Database - Try installing psycopg2-binary separately first
+# Run: pip install --only-binary :all: psycopg2-binary
+sqlalchemy>=2.0.23
+psycopg2-binary>=2.9.9; platform_system != "Windows"
+# Alternative for Windows if psycopg2-binary fails:
+# pg8000>=1.31.0
+alembic>=1.12.1
+
+# Authentication & Security
+bcrypt>=4.1.1
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# Data Processing
+pandas>=2.1.3
+numpy>=1.26.2
+
+# Visualization
+plotly>=5.18.0
+matplotlib>=3.8.2
+
+# Report Generation
+reportlab>=4.0.7
+weasyprint>=60.1
+jinja2>=3.1.2
+
+# File Handling
+Pillow>=10.1.0
+python-multipart>=0.0.6
+
+# Date/Time
+python-dateutil>=2.8.2
+pytz>=2023.3
+
+# Email (Optional)
+sendgrid>=6.11.0
+
+# AWS S3 (Optional)
+boto3>=1.29.7
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+requests>=2.31.0
+
+# Development
+pytest>=7.4.3
+pytest-cov>=4.1.0
+black>=23.11.0
+flake8>=6.1.0
+
