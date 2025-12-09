@@ -95,3 +95,4 @@ SECRET_KEY=Dj6PM0CW90SUetGjgL2vdAqQH9Asq0UjoSdEsqLZdUQ=
 4. **Check Streamlit Cloud logs** - Look for error messages
 5. **Verify Supabase** - Make sure your database is running and accessible
 
+

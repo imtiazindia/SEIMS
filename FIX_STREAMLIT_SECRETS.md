@@ -70,3 +70,4 @@ SECRET_KEY=Dj6PM0CW90SUetGjgL2vdAqQH9Asq0UjoSdEsqLZdUQ=
 
 The app will automatically use the `.env` file when running locally, and use Streamlit secrets when deployed to Streamlit Cloud.
 
+

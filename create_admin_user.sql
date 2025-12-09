@@ -10,8 +10,8 @@
 -- Replace 'YOUR_BCRYPT_HASH' with the actual hash of your password
 INSERT INTO users (email, password_hash, name, role, is_active, created_at)
 VALUES (
-    'admin@seims.edu',
-    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqBWVHxkd0',  -- Replace with your bcrypt hash
+    'imtiyaz@rckr.com',
+    '$2a$12$IPQtGGaWxJ01qHzSA4eLreBHMESAK2OC1cTw2ZRyAX8/QUkDWSPmq',  -- Replace with your bcrypt hash
     'System Administrator',
     'admin',
     true,

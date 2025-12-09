@@ -215,3 +215,4 @@ SECRET_KEY = "your-secret-key-here"
 - Supabase docs: [supabase.com/docs](https://supabase.com/docs)
 - Railway docs: [docs.railway.app](https://docs.railway.app)
 
+

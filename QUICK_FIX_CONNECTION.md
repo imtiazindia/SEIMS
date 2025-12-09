@@ -65,3 +65,4 @@ DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/seims_db
 - See `DATABASE_SETUP.md` for complete setup guide
 - Run `python test_database_connection.py` to diagnose issues
 
+
