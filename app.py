@@ -6,6 +6,7 @@ Main Streamlit Application Entry Point
 import streamlit as st
 from src.config.settings import load_config
 from src.auth.authenticator import check_authentication
+from src.utils.diagnostics import run_diagnostics
 
 # Page configuration
 st.set_page_config(
@@ -14,6 +15,54 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Run database diagnostics at startup (only once per session)
+if 'db_diagnostics_run' not in st.session_state:
+    st.session_state.db_diagnostics_run = True
+    
+    # Run diagnostics
+    diagnostics = run_diagnostics()
+    
+    # Store results in session state
+    st.session_state.db_diagnostics = diagnostics
+    
+    # Show diagnostics if there are issues
+    if not diagnostics['config_ok'] or not diagnostics['connection_ok']:
+        with st.container():
+            st.error("⚠️ Database Connection Issue Detected")
+            
+            if not diagnostics['config_ok']:
+                st.error(f"**Configuration Error:** {diagnostics['message']}")
+                st.info(f"**Source:** {diagnostics['config_source']}")
+                st.markdown("""
+                **To fix this:**
+                - **For local development:** Create a `.env` file with `DATABASE_URL=your_connection_string`
+                - **For Streamlit Cloud:** Go to Settings → Secrets and add `DATABASE_URL`
+                - See `STREAMLIT_CLOUD_SECRETS_UPDATE.md` for detailed instructions
+                """)
+            else:
+                st.error(f"**Connection Error:** {diagnostics['message']}")
+                if diagnostics['details']:
+                    st.code(diagnostics['details'], language=None)
+                
+                st.info(f"**DATABASE_URL:** `{diagnostics['database_url']}`")
+                st.info(f"**Config Source:** {diagnostics['config_source']}")
+                
+                st.markdown("""
+                **Troubleshooting:**
+                1. Verify your DATABASE_URL is correct
+                2. Check if your Supabase project is active (not paused)
+                3. Ensure you're using the Session Pooler connection string for IPv4 networks
+                4. See `TROUBLESHOOTING_CONNECTION.md` for more help
+                """)
+            
+            # Show expander with full diagnostics
+            with st.expander("🔍 View Full Diagnostics", expanded=False):
+                st.json(diagnostics)
+            
+            # Don't block the app, but show warning
+            st.warning("⚠️ The app may not function correctly without a database connection.")
+            st.divider()
 
 # Load configuration
 config = load_config()
