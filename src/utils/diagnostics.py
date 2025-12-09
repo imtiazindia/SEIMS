@@ -1,13 +1,18 @@
 """
 Database connection diagnostics
-Runs automatically at app startup to verify database connectivity
+Runs automatically at app startup to verify database connectivity.
+
+IMPORTANT: This module uses the same configuration loader as the main
+application (`src.config.settings.load_config`) so diagnostics and the
+app always use the **exact same** DATABASE_URL and settings.
 """
 
 import os
 from typing import Tuple, Optional
 from dotenv import load_dotenv
+from src.config.settings import load_config
 
-# Load environment variables for local development
+# Load environment variables for local development (same as settings.py)
 load_dotenv()
 
 
@@ -30,43 +35,30 @@ def mask_password_in_url(url: str) -> str:
     return url
 
 
-def check_database_config() -> Tuple[bool, str, Optional[str]]:
+def check_database_config() -> Tuple[bool, Optional[str], Optional[str]]:
     """
     Check if DATABASE_URL is configured
     
     Returns:
         (is_configured, display_url, source)
     """
-    database_url = os.getenv('DATABASE_URL')
-    source = None
-    
-    # Try to get from Streamlit secrets (for Streamlit Cloud)
     try:
-        import streamlit as st
-        if hasattr(st, 'secrets'):
-            try:
-                if isinstance(st.secrets, dict) and 'DATABASE_URL' in st.secrets:
-                    database_url = st.secrets['DATABASE_URL']
-                    source = "Streamlit Cloud Secrets"
-                elif hasattr(st.secrets, 'DATABASE_URL'):
-                    database_url = getattr(st.secrets, 'DATABASE_URL')
-                    source = "Streamlit Cloud Secrets"
-            except:
-                pass
-    except:
-        pass
-    
+        # Use the same configuration logic as the main app
+        config = load_config()
+        database_url = config.get("database_url")
+        source = config.get("_config_source", "unknown")
+    except Exception:
+        database_url = None
+        source = "Not configured"
+
     if not database_url:
-        # Check if .env file exists
-        if os.path.exists('.env'):
-            source = ".env file (but DATABASE_URL not found)"
+        # Check if .env file exists to give a more helpful hint
+        if os.path.exists(".env"):
+            source = ".env file present but DATABASE_URL missing or unreadable"
         else:
-            source = "Not configured"
+            source = "Not configured (.env missing and no Streamlit secrets)"
         return False, None, source
-    
-    if not source:
-        source = ".env file" if os.path.exists('.env') else "Environment variable"
-    
+
     display_url = mask_password_in_url(database_url)
     return True, display_url, source
 
