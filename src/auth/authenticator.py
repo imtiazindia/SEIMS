@@ -10,13 +10,31 @@ from passlib.context import CryptContext
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+_BCRYPT_MAX_LENGTH = 72
+
+
+def _normalize_password(password: str) -> str:
+    """
+    Normalize password input for bcrypt.
+
+    Bcrypt only uses the first 72 bytes of a password. To avoid runtime
+    errors like:
+        "password cannot be longer than 72 bytes, truncate manually..."
+    we explicitly truncate any longer passwords before hashing/verifying.
+    """
+    if password is None:
+        return password
+    return password[:_BCRYPT_MAX_LENGTH]
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash"""
-    return pwd_context.verify(plain_password, hashed_password)
+    """Verify a password against its hash (with safe truncation)."""
+    return pwd_context.verify(_normalize_password(plain_password), hashed_password)
+
 
 def get_password_hash(password: str) -> str:
-    """Hash a password"""
-    return pwd_context.hash(password)
+    """Hash a password (with safe truncation)."""
+    return pwd_context.hash(_normalize_password(password))
 
 def authenticate_user(email: str, password: str) -> dict:
     """
