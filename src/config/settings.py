@@ -68,18 +68,11 @@ def load_config():
             source = "environment_variable"
     if not secret_key:
         secret_key = os.getenv('SECRET_KEY')
-    
-    # Final fallback to defaults (should not be used in production)
-    # Only use localhost default if we're definitely in a local dev context
-    if not database_url:
-        # Check if we're running locally (not on Streamlit Cloud)
-        is_local = os.getenv('STREAMLIT_SERVER_PORT') is None and 'streamlit' not in str(st.__file__).lower() if hasattr(st, '__file__') else True
-        if is_local:
-            database_url = 'postgresql://localhost/seims_db'
-            source = "default_localhost"
-        else:
-            # On Streamlit Cloud but no secrets found - this is an error
-            database_url = 'postgresql://localhost/seims_db'  # Will fail, but shows the issue
+
+    # IMPORTANT: Never silently fall back to a localhost default.
+    # If DATABASE_URL is not set via Streamlit secrets or environment
+    # variables, the rest of the app will surface a clear configuration
+    # error instead of trying to connect to localhost.
     
     config = {
         'database_url': database_url,

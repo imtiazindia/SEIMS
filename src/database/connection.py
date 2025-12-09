@@ -22,18 +22,18 @@ def _get_engine():
         _config = load_config()
         
         try:
-            # For Supabase Session Pooler on IPv4 networks, ensure proper connection handling
+            # Always use the DATABASE_URL provided by load_config()
             database_url = _config['database_url']
-            
+
+            # Basic connect args; SSL is already specified in the URL for Supabase
+            connect_args = {"connect_timeout": 10}
+
             _engine = create_engine(
                 database_url,
                 pool_pre_ping=True,
                 pool_size=10,
                 max_overflow=20,
-                connect_args={
-                    "connect_timeout": 10,
-                    "sslmode": "require" if "supabase" in database_url.lower() else None
-                }
+                connect_args=connect_args,
             )
             # Create session factory
             _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
