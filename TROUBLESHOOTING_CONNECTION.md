@@ -8,16 +8,18 @@ This error means your application cannot connect to PostgreSQL. Here's how to fi
 
 ## Quick Diagnosis
 
-Run the test script to diagnose the issue:
+Use one of these quick checks:
 
-```bash
-python test_database_connection.py
-```
-
-This will check:
-- If DATABASE_URL is configured
-- If PostgreSQL is running (for local setups)
-- If the connection works
+- Launch the app (`streamlit run app.py`); the top banner shows configuration/connection status and any errors.
+- Or run a lightweight diagnostic:
+  ```bash
+  python - <<'PY'
+  import json
+  from src.utils.diagnostics import run_diagnostics
+  print(json.dumps(run_diagnostics(), indent=2))
+  PY
+  ```
+  This reports whether config and database connectivity are OK and includes error details.
 
 ---
 
@@ -159,10 +161,14 @@ Examples:
 
 ## Testing Your Connection
 
-### Method 1: Use the test script
+### Method 1: Quick diagnostic
 
 ```bash
-python test_database_connection.py
+python - <<'PY'
+import json
+from src.utils.diagnostics import run_diagnostics
+print(json.dumps(run_diagnostics(), indent=2))
+PY
 ```
 
 ### Method 2: Test manually

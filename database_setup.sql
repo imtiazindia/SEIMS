@@ -165,6 +165,6 @@ CREATE TRIGGER update_ieps_updated_at
 DO $$
 BEGIN
     RAISE NOTICE '✅ Database tables created successfully!';
-    RAISE NOTICE '📝 Next step: Create an admin user (see create_admin_user.sql)';
+    RAISE NOTICE '📝 Next step: Create an admin user (run python create_admin.py)';
 END $$;
 

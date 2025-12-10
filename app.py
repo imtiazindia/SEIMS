@@ -43,7 +43,7 @@ with st.container():
                 **To fix this:**
                 - **For local development:** Create a `.env` file with `DATABASE_URL=your_connection_string`
                 - **For Streamlit Cloud:** Go to Settings → Secrets and add `DATABASE_URL`
-                - See `STREAMLIT_CLOUD_SECRETS_UPDATE.md` for detailed instructions
+                - See `TROUBLESHOOTING_CONNECTION.md` for detailed instructions
                 """
             )
         else:

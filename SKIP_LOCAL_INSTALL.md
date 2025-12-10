@@ -20,14 +20,8 @@ You don't need to install `psycopg2-binary` locally! Streamlit Cloud will handle
    - Wait for "Success" message
 
 3. **Create admin user:**
-   - First, generate a password hash:
-     - Go to: https://bcrypt-generator.com/
-     - Enter your desired password (e.g., "Admin123!")
-     - Click "Generate Hash"
-     - Copy the hash (starts with $2b$12$...)
-   - Open `create_admin_user.sql`
-   - Replace `YOUR_BCRYPT_HASH` with your generated hash
-   - Run the SQL in Supabase SQL Editor
+   - Run `python create_admin.py` locally (with `DATABASE_URL` set) and follow prompts
+   - Or create via Supabase SQL Editor using your own bcrypt hash (fields mirror `create_admin.py`)
 
 ### Step 2: Deploy to Streamlit Cloud
 
@@ -97,7 +91,7 @@ If you want to develop locally later:
 ## ✅ Checklist
 
 - [ ] Database tables created in Supabase (run database_setup.sql)
-- [ ] Admin user created (run create_admin_user.sql)
+- [ ] Admin user created (run `python create_admin.py`)
 - [ ] App deployed to Streamlit Cloud
 - [ ] Secrets configured in Streamlit Cloud
 - [ ] App loads successfully
