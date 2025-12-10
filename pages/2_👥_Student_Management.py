@@ -97,7 +97,7 @@ def _create_or_update_student_basic(
             setattr(db_student, "registration_step", 0)
 
             session.add(db_student)
-            session.flush()  # ensure student_id is assigned
+            session.flush()  # ensure student_id is assigned before admission number
 
         db_student.first_name = data["first_name"]
         db_student.last_name = data["last_name"]
@@ -106,8 +106,8 @@ def _create_or_update_student_basic(
         db_student.gender = data["gender"]
         db_student.enrollment_date = data["enrollment_date"]
 
-        # Admission number auto-generation if not already set
-        if not db_student.admission_number:
+        # Admission number auto-generation if not already set (needs student_id)
+        if not db_student.admission_number and db_student.student_id:
             year = date.today().year
             db_student.admission_number = f"S-{year}-{db_student.student_id:04d}"
 
