@@ -333,6 +333,11 @@ with tab1:
             "Review available roles and quickly filter users by role to adjust assignments."
         )
 
+        # Show any global role update message once, outside the row layout
+        if "role_update_message" in st.session_state:
+            st.success(st.session_state["role_update_message"])
+            del st.session_state["role_update_message"]
+
         # Show defined roles
         st.markdown("**Available Roles**")
         for key, label in ROLES.items():
@@ -406,10 +411,14 @@ with tab1:
                                             )
                                         else:
                                             db_user.role = new_role
-                                            st.success(
+                                            # Store message and rerun so it renders once at top
+                                            st.session_state[
+                                                "role_update_message"
+                                            ] = (
                                                 f"Updated role for **{db_user.name}** "
                                                 f"to **{get_role_display_name(new_role)}**."
                                             )
+                                            st.rerun()
                             except Exception as e:
                                 st.error(f"Error updating role: `{e}`")
 
