@@ -36,7 +36,14 @@ def _get_engine():
                 connect_args=connect_args,
             )
             # Create session factory
-            _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
+            # expire_on_commit=False so objects can be safely read after the
+            # context manager commits/closes the session (e.g. in Streamlit UI).
+            _SessionLocal = sessionmaker(
+                autocommit=False,
+                autoflush=False,
+                expire_on_commit=False,
+                bind=_engine,
+            )
         except Exception as e:
             _engine = None
             _SessionLocal = None
