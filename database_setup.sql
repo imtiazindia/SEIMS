@@ -34,6 +34,15 @@ CREATE TABLE IF NOT EXISTS students (
     enrollment_date DATE NOT NULL,
     expected_graduation_date DATE,
     status VARCHAR(50) DEFAULT 'active',
+    -- Registration workflow & extended profile fields
+    registration_status VARCHAR(50) DEFAULT 'draft',
+    registration_step INTEGER DEFAULT 0,
+    contact_info JSONB,
+    academic_info JSONB,
+    medical_info JSONB,
+    learning_profile JSONB,
+    review_status VARCHAR(50),
+    review_notes TEXT,
     created_by INTEGER REFERENCES users(user_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -41,6 +50,135 @@ CREATE TABLE IF NOT EXISTS students (
 
 CREATE INDEX IF NOT EXISTS idx_students_admission ON students(admission_number);
 CREATE INDEX IF NOT EXISTS idx_students_status ON students(status);
+CREATE INDEX IF NOT EXISTS idx_students_registration_status ON students(registration_status);
+
+-- Ensure new registration columns exist (for upgrades on existing databases)
+ALTER TABLE students
+    ADD COLUMN IF NOT EXISTS registration_status VARCHAR(50) DEFAULT 'draft',
+    ADD COLUMN IF NOT EXISTS registration_step INTEGER DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS contact_info JSONB,
+    ADD COLUMN IF NOT EXISTS academic_info JSONB,
+    ADD COLUMN IF NOT EXISTS medical_info JSONB,
+    ADD COLUMN IF NOT EXISTS learning_profile JSONB,
+    ADD COLUMN IF NOT EXISTS review_status VARCHAR(50),
+    ADD COLUMN IF NOT EXISTS review_notes TEXT;
+
+-- Sample student registrations for review/testing
+INSERT INTO users (email, password_hash, name, role, is_active)
+VALUES
+    ('admin@seims.edu', '$2b$12$exampleexampleexampleexampleexampleexa', 'System Administrator', 'admin', true)
+ON CONFLICT (email) DO NOTHING;
+
+-- Draft registration (Step 2 of 6)
+INSERT INTO students (
+    admission_number, first_name, last_name, preferred_name,
+    date_of_birth, gender, nationality,
+    grade, section, enrollment_date, expected_graduation_date,
+    status, registration_status, registration_step,
+    contact_info, academic_info, created_by
+)
+VALUES (
+    'S-2024-0001', 'Sarah', 'Mehta', 'Sarah',
+    '2014-05-12', 'Female', 'Indian',
+    '4', 'A', CURRENT_DATE, NULL,
+    'pending', 'draft', 2,
+    '{
+        "primary_guardian": {
+            "relationship": "Mother",
+            "full_name": "Aisha Mehta",
+            "phone": "+91-9876543210",
+            "email": "aisha.mehta@example.com"
+        },
+        "address": {
+            "line1": "12 Green Park Road",
+            "city": "Bangalore",
+            "state": "KA",
+            "postal_code": "560001"
+        },
+        "emergency_contacts": [
+            {"name": "Rohan Mehta", "phone": "+91-9876500001", "relationship": "Father"},
+            {"name": "Neha Rao", "phone": "+91-9876500002", "relationship": "Aunt"}
+        ]
+    }'::jsonb,
+    NULL,
+    (SELECT user_id FROM users WHERE email = 'admin@seims.edu' LIMIT 1)
+)
+ON CONFLICT (admission_number) DO NOTHING;
+
+-- Pending review registration (Step 6 of 6)
+INSERT INTO students (
+    admission_number, first_name, last_name,
+    date_of_birth, gender, nationality,
+    grade, section, enrollment_date,
+    status, registration_status, registration_step,
+    contact_info, academic_info, medical_info, learning_profile,
+    review_status, created_by
+)
+VALUES (
+    'S-2024-0002', 'Omar', 'Khan',
+    '2013-09-03', 'Male', 'Indian',
+    '5', 'B', CURRENT_DATE,
+    'pending', 'pending_review', 6,
+    '{
+        "primary_guardian": {
+            "relationship": "Father",
+            "full_name": "Imran Khan",
+            "phone": "+91-9876511111",
+            "email": "imran.khan@example.com"
+        }
+    }'::jsonb,
+    '{
+        "current_enrollment": {
+            "class_teacher": "Ms. Rao"
+        }
+    }'::jsonb,
+    '{
+        "conditions": [
+            {
+                "name": "ADHD",
+                "severity": "Moderate"
+            }
+        ]
+    }'::jsonb,
+    '{
+        "primary_diagnosis": "ADHD",
+        "impact_level": "Moderate",
+        "affected_areas": ["Attention", "Organization"]
+    }'::jsonb,
+    'pending',
+    (SELECT user_id FROM users WHERE email = 'admin@seims.edu' LIMIT 1)
+)
+ON CONFLICT (admission_number) DO NOTHING;
+
+-- Approved registration / active student
+INSERT INTO students (
+    admission_number, first_name, last_name,
+    date_of_birth, gender, nationality,
+    grade, section, enrollment_date,
+    status, registration_status, registration_step,
+    contact_info, academic_info, review_status, created_by
+)
+VALUES (
+    'S-2024-0003', 'Lila', 'Singh',
+    '2012-02-20', 'Female', 'Indian',
+    '6', 'C', CURRENT_DATE - INTERVAL '1 year',
+    'active', 'approved', 6,
+    '{
+        "primary_guardian": {
+            "relationship": "Guardian",
+            "full_name": "Rita Singh",
+            "phone": "+91-9876522222"
+        }
+    }'::jsonb,
+    '{
+        "current_enrollment": {
+            "class_teacher": "Mr. Sharma"
+        }
+    }'::jsonb,
+    'approved',
+    (SELECT user_id FROM users WHERE email = 'admin@seims.edu' LIMIT 1)
+)
+ON CONFLICT (admission_number) DO NOTHING;
 
 -- Create learning_difficulties table
 CREATE TABLE IF NOT EXISTS learning_difficulties (

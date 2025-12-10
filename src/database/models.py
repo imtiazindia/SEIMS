@@ -44,6 +44,22 @@ class Student(Base):
     enrollment_date = Column(Date, nullable=False)
     expected_graduation_date = Column(Date, nullable=True)
     status = Column(String(50), default="active")
+
+    # Registration workflow & extended profile
+    registration_status = Column(  # draft, pending_review, approved, denied
+        String(50), default="draft", index=True
+    )
+    registration_step = Column(Integer, default=0)  # highest completed step (0–6)
+
+    # JSON blobs for wizard steps beyond basic student fields
+    contact_info = Column(JSON, nullable=True)      # guardians, address, emergency contacts
+    academic_info = Column(JSON, nullable=True)     # grade/section, teachers, schedule prefs
+    medical_info = Column(JSON, nullable=True)      # conditions, allergies, medications
+    learning_profile = Column(JSON, nullable=True)  # diagnosis, impact areas, documents
+
+    review_status = Column(String(50), nullable=True)  # pending, approved, denied
+    review_notes = Column(Text, nullable=True)
+
     created_by = Column(Integer, ForeignKey("users.user_id"))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
