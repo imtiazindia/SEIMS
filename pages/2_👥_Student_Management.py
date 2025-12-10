@@ -87,7 +87,9 @@ def _create_or_update_student_basic(
             # Use attribute assignment instead of constructor kwargs to avoid
             # issues if new fields are not yet present in older DB/model versions.
             db_student = Student()
-            db_student.created_by = current_user_id
+            if current_user_id:
+                # Only set if known; avoids FK issues when session user is not in DB
+                db_student.created_by = current_user_id
             db_student.status = "pending"
             # These attributes exist in the current model, but we set them
             # defensively via setattr in case of partial upgrades.
