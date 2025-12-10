@@ -78,16 +78,22 @@ def _create_or_update_student_basic(
     """Create or update basic student info (step 1)."""
     with get_db_session() as session:
         if student:
-            db_student = session.query(Student).filter(
-                Student.student_id == student.student_id
-            ).first()
-        else:
-            db_student = Student(
-                created_by=current_user_id,
-                status="pending",
-                registration_status="draft",
-                registration_step=0,
+            db_student = (
+                session.query(Student)
+                .filter(Student.student_id == student.student_id)
+                .first()
             )
+        else:
+            # Use attribute assignment instead of constructor kwargs to avoid
+            # issues if new fields are not yet present in older DB/model versions.
+            db_student = Student()
+            db_student.created_by = current_user_id
+            db_student.status = "pending"
+            # These attributes exist in the current model, but we set them
+            # defensively via setattr in case of partial upgrades.
+            setattr(db_student, "registration_status", "draft")
+            setattr(db_student, "registration_step", 0)
+
             session.add(db_student)
             session.flush()  # ensure student_id is assigned
 
