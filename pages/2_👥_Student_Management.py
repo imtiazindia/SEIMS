@@ -84,21 +84,16 @@ def _create_or_update_student_basic(
                 .first()
             )
         else:
-            # Use attribute assignment instead of constructor kwargs to avoid
-            # issues if new fields are not yet present in older DB/model versions.
+            # Create new student – set ALL required NOT NULL fields before flush
             db_student = Student()
             if current_user_id:
-                # Only set if known; avoids FK issues when session user is not in DB
                 db_student.created_by = current_user_id
             db_student.status = "pending"
-            # These attributes exist in the current model, but we set them
-            # defensively via setattr in case of partial upgrades.
             setattr(db_student, "registration_status", "draft")
             setattr(db_student, "registration_step", 0)
-
             session.add(db_student)
-            session.flush()  # ensure student_id is assigned before admission number
 
+        # Set required fields (must happen before flush for new records)
         db_student.first_name = data["first_name"]
         db_student.last_name = data["last_name"]
         db_student.preferred_name = data["preferred_name"] or None
@@ -106,7 +101,10 @@ def _create_or_update_student_basic(
         db_student.gender = data["gender"]
         db_student.enrollment_date = data["enrollment_date"]
 
-        # Admission number auto-generation if not already set (needs student_id)
+        # Flush to get student_id for new records
+        session.flush()
+
+        # Admission number auto-generation (needs student_id from flush)
         if not db_student.admission_number and db_student.student_id:
             year = date.today().year
             db_student.admission_number = f"S-{year}-{db_student.student_id:04d}"
@@ -114,7 +112,6 @@ def _create_or_update_student_basic(
         # Track highest completed step
         db_student.registration_step = max(db_student.registration_step or 0, step_number)
 
-        session.flush()
         st.session_state["current_registration_id"] = db_student.student_id
         return db_student
 
