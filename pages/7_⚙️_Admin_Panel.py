@@ -370,7 +370,7 @@ with tab1:
                 st.info("No users match this role filter.")
             else:
                 for u in filtered:
-                    cols = st.columns([3, 3, 3, 1.5])
+                    cols = st.columns([3, 3, 2])
                     with cols[0]:
                         st.write(f"**{u.name}**")
                         st.caption(f"`{u.email}`")
@@ -378,49 +378,6 @@ with tab1:
                         st.write(f"Role: {get_role_display_name(u.role)}")
                     with cols[2]:
                         st.write(f"Active: {'✅' if u.is_active else '⛔'}")
-                    with cols[3]:
-                        # Quick role change
-                        new_role = st.selectbox(
-                            "Change role",
-                            options=list(ROLES.keys()),
-                            index=list(ROLES.keys()).index(u.role)
-                            if u.role in ROLES
-                            else 0,
-                            key=f"role_change_{u.user_id}",
-                            label_visibility="collapsed",
-                            format_func=lambda r: get_role_display_name(r),
-                        )
-                        if new_role != u.role:
-                            # Apply change
-                            try:
-                                with get_db_session() as session:
-                                    db_user = (
-                                        session.query(User)
-                                        .filter(User.user_id == u.user_id)
-                                        .first()
-                                    )
-                                    if db_user:
-                                        # Protect current admin from accidental demotion
-                                        if (
-                                            db_user.user_id == current_user_id
-                                            and db_user.role == "admin"
-                                            and new_role != "admin"
-                                        ):
-                                            st.warning(
-                                                "You cannot change your own role away from **admin** here."
-                                            )
-                                        else:
-                                            db_user.role = new_role
-                                            # Store message and rerun so it renders once at top
-                                            st.session_state[
-                                                "role_update_message"
-                                            ] = (
-                                                f"Updated role for **{db_user.name}** "
-                                                f"to **{get_role_display_name(new_role)}**."
-                                            )
-                                            st.rerun()
-                            except Exception as e:
-                                st.error(f"Error updating role: `{e}`")
 
 
 with tab2:
