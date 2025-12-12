@@ -549,6 +549,7 @@ with tab2:
                                 index=["Mild", "Moderate", "Severe"].index(
                                     cond.get("severity", "Mild")
                                 ),
+                                key="cond_severity",
                             )
                         with col2:
                             cond_doctor = st.text_input(
@@ -582,6 +583,7 @@ with tab2:
                                 index=["Mild", "Moderate", "Severe"].index(
                                     allergy.get("severity", "Mild")
                                 ),
+                                key="allergy_severity",
                             )
 
                     st.markdown("---")
