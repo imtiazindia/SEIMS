@@ -61,7 +61,11 @@ ALTER TABLE students
     ADD COLUMN IF NOT EXISTS medical_info JSONB,
     ADD COLUMN IF NOT EXISTS learning_profile JSONB,
     ADD COLUMN IF NOT EXISTS review_status VARCHAR(50),
-    ADD COLUMN IF NOT EXISTS review_notes TEXT;
+    ADD COLUMN IF NOT EXISTS review_notes TEXT,
+    ADD COLUMN IF NOT EXISTS internal_notes TEXT,
+    ADD COLUMN IF NOT EXISTS parent_notes TEXT,
+    ADD COLUMN IF NOT EXISTS reviewed_by INTEGER REFERENCES users(user_id),
+    ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP;
 
 -- Sample student registrations for review/testing
 INSERT INTO users (email, password_hash, name, role, is_active)

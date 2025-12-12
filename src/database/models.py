@@ -57,15 +57,19 @@ class Student(Base):
     medical_info = Column(JSON, nullable=True)      # conditions, allergies, medications
     learning_profile = Column(JSON, nullable=True)  # diagnosis, impact areas, documents
 
-    review_status = Column(String(50), nullable=True)  # pending, approved, denied
-    review_notes = Column(Text, nullable=True)
+    # Approval workflow
+    internal_notes = Column(Text, nullable=True)  # Staff/department comments (not visible to parents)
+    parent_notes = Column(Text, nullable=True)    # Comments visible to parents/guardians
+    reviewed_by = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
 
     created_by = Column(Integer, ForeignKey("users.user_id"))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    created_by_user = relationship("User", back_populates="created_students")
+    created_by_user = relationship("User", back_populates="created_students", foreign_keys=[created_by])
+    reviewed_by_user = relationship("User", foreign_keys=[reviewed_by])
     learning_difficulties = relationship("LearningDifficulty", back_populates="student")
     ieps = relationship("IEP", back_populates="student")
     sessions = relationship("Session", back_populates="student")

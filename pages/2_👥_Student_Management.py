@@ -39,7 +39,9 @@ def _registration_badge(status: str, step: int) -> str:
     if status == "pending_review":
         return f"⏳ Pending Review · Step {step}/6"
     if status == "denied":
-        return f"❌ Denied · Step {step}/6"
+        return f"❌ Denied (Edit & Resubmit)"
+    if status == "on_hold":
+        return f"🟡 On Hold (Edit & Resubmit)"
     return f"📝 Draft · Step {step}/6"
 
 
@@ -172,6 +174,9 @@ with tab2:
                     key=f"select_reg_{s.student_id}",
                 )
                 st.caption(_registration_badge(s.registration_status, s.registration_step or 0))
+                # Show reviewer feedback for denied/on_hold
+                if s.registration_status in ("denied", "on_hold") and s.parent_notes:
+                    st.caption(f"💬 Feedback: {s.parent_notes[:50]}...")
                 if sel:
                     st.session_state["current_registration_id"] = s.student_id
                     st.session_state["_pending_step"] = s.registration_step or 1
@@ -766,6 +771,17 @@ with tab2:
             if not current_student:
                 st.warning("Please complete previous steps first.")
             else:
+                # Show reviewer feedback if denied or on_hold
+                reg_status = current_student.registration_status or "draft"
+                if reg_status == "denied":
+                    st.error("❌ **This registration was denied.** Please review the feedback below, make corrections, and resubmit.")
+                    if current_student.parent_notes:
+                        st.warning(f"**Reviewer Feedback:** {current_student.parent_notes}")
+                elif reg_status == "on_hold":
+                    st.warning("🟡 **This registration is on hold.** Additional information is required. Please review the feedback, update the relevant sections, and resubmit.")
+                    if current_student.parent_notes:
+                        st.info(f"**Reviewer Feedback:** {current_student.parent_notes}")
+                
                 st.markdown("#### Summary")
                 st.write(
                     f"**Student:** {current_student.first_name} {current_student.last_name} "
@@ -797,6 +813,10 @@ with tab2:
                 with st.expander("Learning Profile"):
                     st.json(current_student.learning_profile or {})
 
+                # Determine if this is a resubmission
+                is_resubmit = reg_status in ("denied", "on_hold")
+                submit_label = "Resubmit for Review 🔄" if is_resubmit else "Submit Registration ✅"
+                
                 with st.form("step6_review_form"):
                     st.markdown("**Permissions & Consents**")
                     confirm_info = st.checkbox("I confirm all information is accurate", value=False)
@@ -811,7 +831,7 @@ with tab2:
                     with col_buttons[0]:
                         back = st.form_submit_button("◀ Back to Step 5")
                     with col_buttons[1]:
-                        submit = st.form_submit_button("Submit Registration ✅", type="primary")
+                        submit = st.form_submit_button(submit_label, type="primary")
 
                 if back:
                     st.session_state["_pending_step"] = 5
@@ -834,10 +854,22 @@ with tab2:
                                     db_student.registration_step or 0, 6
                                 )
                                 db_student.status = "pending"
-                        st.success(
-                            "Registration submitted and marked as **Pending Review**. "
-                            "An administrator or HoD can now approve or deny this registration."
-                        )
+                                # Clear previous review notes on resubmission
+                                if is_resubmit:
+                                    db_student.internal_notes = None
+                                    db_student.parent_notes = None
+                                    db_student.reviewed_by = None
+                                    db_student.reviewed_at = None
+                        if is_resubmit:
+                            st.success(
+                                "Registration resubmitted and marked as **Pending Review**. "
+                                "The reviewer will be notified of your updates."
+                            )
+                        else:
+                            st.success(
+                                "Registration submitted and marked as **Pending Review**. "
+                                "An administrator or HoD can now approve or deny this registration."
+                            )
                         st.session_state["current_registration_id"] = None
                         st.session_state["_pending_step"] = 1
                         st.rerun()
