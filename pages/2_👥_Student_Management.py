@@ -1085,6 +1085,17 @@ with tab3:
             
             st.caption(f"Showing {len(approved_students)} approved student(s)")
             
+            # Quick access dropdown
+            student_options = {f"{s['first_name']} {s['last_name']} ({s['admission_number']})": s['student_id'] for s in approved_students}
+            selected = st.selectbox(
+                "Quick view profile:",
+                options=["Select a student..."] + list(student_options.keys()),
+                key="quick_profile_select"
+            )
+            if selected != "Select a student...":
+                st.session_state['selected_student_profile'] = student_options[selected]
+                st.rerun()
+            
             # CSS for student cards
             st.markdown("""
             <style>
@@ -1092,12 +1103,17 @@ with tab3:
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 border-radius: 16px;
                 padding: 20px;
-                padding-bottom: 50px;
-                margin: 10px 0;
+                margin: 10px 0 20px 0;
                 color: white;
                 box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
                 position: relative;
                 overflow: hidden;
+                cursor: pointer;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            .student-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
             }
             .student-card::before {
                 content: '';
@@ -1177,52 +1193,6 @@ with tab3:
                 font-size: 0.8em;
                 margin: 3px 3px 0 0;
             }
-            .view-icon {
-                position: absolute;
-                bottom: 12px;
-                right: 12px;
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                background: rgba(255,255,255,0.25);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 14px;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                z-index: 5;
-            }
-            .view-icon:hover {
-                background: rgba(255,255,255,0.4);
-                transform: scale(1.15);
-            }
-            .card-wrapper {
-                position: relative;
-                margin-bottom: 8px;
-            }
-            .card-wrapper .stButton {
-                position: absolute;
-                bottom: 20px;
-                right: 20px;
-                z-index: 10;
-            }
-            .card-wrapper .stButton button {
-                background: transparent !important;
-                border: none !important;
-                width: 32px !important;
-                height: 32px !important;
-                min-height: 32px !important;
-                padding: 0 !important;
-                border-radius: 50% !important;
-                color: transparent !important;
-            }
-            .card-wrapper .stButton button:hover {
-                background: rgba(255,255,255,0.15) !important;
-            }
-            .card-wrapper .stButton button p {
-                display: none !important;
-            }
             </style>
             """, unsafe_allow_html=True)
             
@@ -1246,6 +1216,8 @@ with tab3:
                     # Truncate long values
                     guardian_name = student['guardian_name'][:20] + "..." if len(student['guardian_name']) > 20 else student['guardian_name']
                     guardian_phone = student['guardian_phone'][:15] if student['guardian_phone'] else '—'
+                    
+                    student_id = student['student_id']
                     
                     card_html = f"""
                     <div class="student-card">
@@ -1278,17 +1250,7 @@ with tab3:
                             <div class="info-label" style="margin-bottom: 6px;">Assigned Staff</div>
                             {stakeholder_html}
                         </div>
-                        <div class="view-icon" title="View Full Profile">🔍</div>
                     </div>
                     """
-                    
-                    # Wrap card and button together for positioning
-                    st.markdown('<div class="card-wrapper">', unsafe_allow_html=True)
                     st.markdown(card_html, unsafe_allow_html=True)
-                    
-                    # Invisible button overlaying the icon
-                    if st.button(" ", key=f"view_profile_{student['student_id']}"):
-                        st.session_state['selected_student_profile'] = student['student_id']
-                        st.rerun()
-                    st.markdown('</div>', unsafe_allow_html=True)
 
