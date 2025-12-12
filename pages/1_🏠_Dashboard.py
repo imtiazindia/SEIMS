@@ -230,15 +230,16 @@ if can_approve_registrations(user_role):
                     primary = contact.get('primary_guardian', {})
                     if primary:
                         st.markdown("**Primary Guardian**")
-                        st.write(f"- Name: {primary.get('name', '—')}")
+                        st.write(f"- Name: {primary.get('full_name', '—')}")
                         st.write(f"- Relationship: {primary.get('relationship', '—')}")
                         st.write(f"- Phone: {primary.get('phone', '—')}")
                         st.write(f"- Email: {primary.get('email', '—')}")
                         st.write(f"- Language: {primary.get('language', '—')}")
+                        st.write(f"- Communication Pref: {primary.get('communication_pref', '—')}")
                     address = contact.get('address', {})
                     if address:
                         st.markdown("**Address**")
-                        st.write(f"{address.get('street', '')} {address.get('city', '')} {address.get('state', '')} {address.get('zip', '')}")
+                        st.write(f"{address.get('line1', '')} {address.get('city_state_zip', '')}")
                     emergency = contact.get('emergency_contacts', [])
                     if emergency:
                         st.markdown("**Emergency Contacts**")
@@ -250,18 +251,20 @@ if can_approve_registrations(user_role):
             with st.expander("🎓 Step 3: Academic Information"):
                 academic = student['academic_info']
                 if academic:
-                    st.write(f"**Grade Level:** {academic.get('grade_level', '—')}")
-                    st.write(f"**Section:** {academic.get('section', '—')}")
-                    st.write(f"**Previous School:** {academic.get('previous_school', '—')}")
-                    st.write(f"**Transfer Reason:** {academic.get('transfer_reason', '—')}")
+                    enrollment = academic.get('current_enrollment', {})
+                    st.write(f"**Grade Level:** {enrollment.get('grade', '—')}")
+                    st.write(f"**Section:** {enrollment.get('section', '—')}")
+                    st.write(f"**Class Teacher:** {enrollment.get('class_teacher', '—')}")
+                    st.write(f"**Previous School:** {enrollment.get('previous_school', '—')}")
+                    st.write(f"**Transfer Reason:** {enrollment.get('transfer_reason', '—')}")
                     prefs = academic.get('schedule_preferences', {})
                     if prefs:
                         st.markdown("**Schedule Preferences**")
-                        if prefs.get('morning_sessions'):
+                        if prefs.get('prefers_morning'):
                             st.write("- Prefers morning sessions")
-                        if prefs.get('transportation'):
+                        if prefs.get('transport_assistance'):
                             st.write("- Requires transportation assistance")
-                        if prefs.get('sibling'):
+                        if prefs.get('has_sibling'):
                             st.write("- Has sibling in same school")
                 else:
                     st.caption("No academic information provided.")
@@ -269,32 +272,42 @@ if can_approve_registrations(user_role):
             with st.expander("🏥 Step 4: Medical & Health"):
                 medical = student['medical_info']
                 if medical:
-                    cond = medical.get('condition', {})
-                    if cond.get('name'):
-                        st.markdown("**Medical Condition**")
-                        st.write(f"- Condition: {cond.get('name')} ({cond.get('severity', '—')})")
-                        st.write(f"- Diagnosed by: {cond.get('diagnosed_by', '—')}")
-                        st.write(f"- Treatment: {cond.get('treatment', '—')}")
+                    conditions = medical.get('conditions', [])
+                    if conditions:
+                        st.markdown("**Medical Conditions**")
+                        for cond in conditions:
+                            st.write(f"- Condition: {cond.get('name', '—')} ({cond.get('severity', '—')})")
+                            st.write(f"  - Diagnosed by: {cond.get('diagnosed_by', '—')}")
+                            st.write(f"  - Treatment: {cond.get('treatment', '—')}")
                     
-                    allergy = medical.get('allergy', {})
-                    if allergy.get('allergen'):
-                        st.markdown("**Allergy**")
-                        st.write(f"- Allergen: {allergy.get('allergen')} ({allergy.get('severity', '—')})")
-                        st.write(f"- Reaction: {allergy.get('reaction', '—')}")
+                    allergies = medical.get('allergies', [])
+                    if allergies:
+                        st.markdown("**Allergies**")
+                        for allergy in allergies:
+                            st.write(f"- Allergen: {allergy.get('allergen', '—')} ({allergy.get('severity', '—')})")
+                            st.write(f"  - Reaction: {allergy.get('reaction', '—')}")
                     
-                    med = medical.get('medication', {})
-                    if med.get('name'):
-                        st.markdown("**Medication**")
-                        st.write(f"- Medication: {med.get('name')}")
-                        st.write(f"- Dosage: {med.get('dosage', '—')}, {med.get('frequency', '—')}")
-                        st.write(f"- Prescribed for: {med.get('prescribed_for', '—')}")
+                    medications = medical.get('medications', [])
+                    if medications:
+                        st.markdown("**Medications**")
+                        for med in medications:
+                            st.write(f"- Medication: {med.get('name', '—')}")
+                            st.write(f"  - Dosage: {med.get('dosage', '—')}")
+                            st.write(f"  - Prescribed for: {med.get('reason', '—')}")
                 else:
                     st.caption("No medical information provided.")
             
             with st.expander("🧠 Step 5: Learning Profile"):
                 profile = student['learning_profile']
                 if profile:
-                    st.write(f"**Primary Diagnosis:** {profile.get('diagnosis', '—')}")
+                    diag = profile.get('primary_diagnosis', '—')
+                    other_diag = profile.get('other_diagnosis', '')
+                    if diag == 'Other' and other_diag:
+                        diag = f"Other: {other_diag}"
+                    st.write(f"**Primary Diagnosis:** {diag}")
+                    st.write(f"**Diagnosis Date:** {profile.get('diagnosis_date', '—')}")
+                    st.write(f"**Diagnosing Agency:** {profile.get('diagnosing_agency', '—')}")
+                    st.write(f"**Report Reference #:** {profile.get('report_ref', '—')}")
                     st.write(f"**Impact Level:** {profile.get('impact_level', '—')}")
                     affected = profile.get('affected_areas', [])
                     if affected:
