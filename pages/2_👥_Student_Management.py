@@ -174,14 +174,19 @@ with tab2:
                 st.caption(_registration_badge(s.registration_status, s.registration_step or 0))
                 if sel:
                     st.session_state["current_registration_id"] = s.student_id
-                    st.session_state["registration_step_ui"] = s.registration_step or 1
-                    st.experimental_rerun()
+                    st.session_state["_pending_step"] = s.registration_step or 1
+                    st.rerun()
 
         if st.button("➕ Start new registration"):
             st.session_state["current_registration_id"] = None
-            st.session_state["registration_step_ui"] = 1
+            st.session_state["_pending_step"] = 1
+            st.rerun()
 
     with col_right:
+        # Handle pending step navigation (must happen before widget renders)
+        if "_pending_step" in st.session_state:
+            st.session_state["registration_step_ui"] = st.session_state.pop("_pending_step")
+
         # Determine current step in UI
         current_step = st.session_state.get("registration_step_ui", 1)
         current_student = _ensure_current_registration()
@@ -281,8 +286,8 @@ with tab2:
                     student = _create_or_update_student_basic(current_student, data, step_number=1)
                     st.success("Step 1 saved.")
                     st.session_state["current_registration_id"] = student.student_id
-                    st.session_state["registration_step_ui"] = 2
-                    st.experimental_rerun()
+                    st.session_state["_pending_step"] = 2
+                    st.rerun()
 
         # ----- STEP 2: CONTACT INFORMATION -----
         elif current_step == 2:
@@ -370,8 +375,8 @@ with tab2:
                         save_next = st.form_submit_button("Save & Next ▶", type="primary")
 
                 if back:
-                    st.session_state["registration_step_ui"] = 1
-                    st.experimental_rerun()
+                    st.session_state["_pending_step"] = 1
+                    st.rerun()
                 if save_next:
                     if not full_name or not phone or not email:
                         st.error("Primary guardian name, phone and email are required.")
@@ -403,8 +408,8 @@ with tab2:
                         }
                         _update_json_field(current_student, "contact_info", payload, step=2)
                         st.success("Step 2 saved.")
-                        st.session_state["registration_step_ui"] = 3
-                        st.experimental_rerun()
+                        st.session_state["_pending_step"] = 3
+                        st.rerun()
 
         # ----- STEP 3: ACADEMIC DETAILS -----
         elif current_step == 3:
@@ -476,8 +481,8 @@ with tab2:
                         save_next = st.form_submit_button("Save & Next ▶", type="primary")
 
                 if back:
-                    st.session_state["registration_step_ui"] = 2
-                    st.experimental_rerun()
+                    st.session_state["_pending_step"] = 2
+                    st.rerun()
                 if save_next:
                     if not grade_val:
                         st.error("Grade level is required.")
@@ -508,8 +513,8 @@ with tab2:
                                 db_student.grade = grade_val
                                 db_student.section = section_val
                         st.success("Step 3 saved.")
-                        st.session_state["registration_step_ui"] = 4
-                        st.experimental_rerun()
+                        st.session_state["_pending_step"] = 4
+                        st.rerun()
 
         # ----- STEP 4: MEDICAL & HEALTH -----
         elif current_step == 4:
@@ -609,8 +614,8 @@ with tab2:
                         save_next = st.form_submit_button("Save & Next ▶", type="primary")
 
                 if back:
-                    st.session_state["registration_step_ui"] = 3
-                    st.experimental_rerun()
+                    st.session_state["_pending_step"] = 3
+                    st.rerun()
                 if save_next:
                     payload = {}
                     if has_cond and cond_name:
@@ -640,8 +645,8 @@ with tab2:
                         )
                     _update_json_field(current_student, "medical_info", payload, step=4)
                     st.success("Step 4 saved.")
-                    st.session_state["registration_step_ui"] = 5
-                    st.experimental_rerun()
+                    st.session_state["_pending_step"] = 5
+                    st.rerun()
 
         # ----- STEP 5: LEARNING DIFFICULTY PROFILE -----
         elif current_step == 5:
@@ -731,8 +736,8 @@ with tab2:
                         save_next = st.form_submit_button("Save & Next ▶", type="primary")
 
                 if back:
-                    st.session_state["registration_step_ui"] = 4
-                    st.experimental_rerun()
+                    st.session_state["_pending_step"] = 4
+                    st.rerun()
                 if save_next:
                     if not diag:
                         st.error("Primary diagnosis is required.")
@@ -748,8 +753,8 @@ with tab2:
                         }
                         _update_json_field(current_student, "learning_profile", payload, step=5)
                         st.success("Step 5 saved.")
-                        st.session_state["registration_step_ui"] = 6
-                        st.experimental_rerun()
+                        st.session_state["_pending_step"] = 6
+                        st.rerun()
 
         # ----- STEP 6: REVIEW & SUBMISSION -----
         elif current_step == 6:
@@ -806,8 +811,8 @@ with tab2:
                         submit = st.form_submit_button("Submit Registration ✅", type="primary")
 
                 if back:
-                    st.session_state["registration_step_ui"] = 5
-                    st.experimental_rerun()
+                    st.session_state["_pending_step"] = 5
+                    st.rerun()
                 if submit:
                     if not (confirm_info and confirm_docs):
                         st.error(
@@ -830,9 +835,9 @@ with tab2:
                             "Registration submitted and marked as **Pending Review**. "
                             "An administrator or HoD can now approve or deny this registration."
                         )
-                        st.session_state["registration_step_ui"] = 1
                         st.session_state["current_registration_id"] = None
-                        st.experimental_rerun()
+                        st.session_state["_pending_step"] = 1
+                        st.rerun()
 
 
 with tab3:
