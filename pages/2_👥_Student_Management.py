@@ -1085,6 +1085,16 @@ with tab3:
             
             st.caption(f"Showing {len(approved_students)} approved student(s) · Click avatar to view profile")
             
+            # Check for profile query parameter
+            if "view_profile" in st.query_params:
+                try:
+                    profile_id = int(st.query_params["view_profile"])
+                    st.session_state['selected_student_profile'] = profile_id
+                    st.query_params.clear()
+                    st.rerun()
+                except (ValueError, TypeError):
+                    st.query_params.clear()
+            
             # CSS for student cards with clickable avatar
             st.markdown("""
             <style>
@@ -1108,8 +1118,35 @@ with tab3:
                 background: rgba(255,255,255,0.1);
                 border-radius: 50%;
             }
-            .student-card-content {
-                margin-left: 75px;
+            .student-card-header {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 12px;
+            }
+            .student-avatar-link {
+                text-decoration: none;
+                color: white;
+            }
+            .student-avatar {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                font-weight: bold;
+                border: 3px solid rgba(255,255,255,0.4);
+                flex-shrink: 0;
+                transition: all 0.2s ease;
+                cursor: pointer;
+            }
+            .student-avatar:hover {
+                background: rgba(255,255,255,0.35);
+                transform: scale(1.08);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.25);
             }
             .student-name {
                 font-size: 1.2em;
@@ -1131,7 +1168,6 @@ with tab3:
                 grid-template-columns: 1fr 1fr;
                 gap: 8px;
                 font-size: 0.85em;
-                margin-top: 12px;
             }
             .info-item {
                 background: rgba(255,255,255,0.1);
@@ -1161,36 +1197,6 @@ with tab3:
                 font-size: 0.8em;
                 margin: 3px 3px 0 0;
             }
-            /* Avatar button styling */
-            .avatar-btn-container {
-                position: absolute;
-                top: 20px;
-                left: 20px;
-                z-index: 10;
-            }
-            .avatar-btn-container button {
-                width: 60px !important;
-                height: 60px !important;
-                min-height: 60px !important;
-                border-radius: 50% !important;
-                background: rgba(255,255,255,0.2) !important;
-                border: 3px solid rgba(255,255,255,0.4) !important;
-                color: white !important;
-                font-size: 22px !important;
-                font-weight: bold !important;
-                padding: 0 !important;
-                transition: all 0.2s ease !important;
-                cursor: pointer !important;
-            }
-            .avatar-btn-container button:hover {
-                background: rgba(255,255,255,0.35) !important;
-                transform: scale(1.08) !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-            }
-            .avatar-btn-container button p {
-                margin: 0 !important;
-                line-height: 1 !important;
-            }
             </style>
             """, unsafe_allow_html=True)
             
@@ -1217,43 +1223,41 @@ with tab3:
                     
                     student_id = student['student_id']
                     
-                    # Card without avatar (avatar will be a button)
+                    # Card with clickable avatar (link-based)
                     card_html = f"""
                     <div class="student-card">
-                        <div class="student-card-content">
-                            <p class="student-name">{student['first_name']} {student['last_name']}</p>
-                            <span class="student-admission">📋 {student['admission_number']}</span>
-                            <div class="student-info-grid">
-                                <div class="info-item">
-                                    <div class="info-label">Grade & Section</div>
-                                    <div class="info-value">🎓 {student['grade']} - {student['section']}</div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-label">Gender</div>
-                                    <div class="info-value">{'👦' if student['gender'] == 'Male' else '👧' if student['gender'] == 'Female' else '🧑'} {student['gender']}</div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-label">Guardian</div>
-                                    <div class="info-value">👨‍👩‍👧 {guardian_name}</div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-label">Contact</div>
-                                    <div class="info-value">📞 {guardian_phone}</div>
-                                </div>
+                        <div class="student-card-header">
+                            <a href="?view_profile={student_id}" class="student-avatar-link" title="Click to view full profile">
+                                <div class="student-avatar">{initials}</div>
+                            </a>
+                            <div>
+                                <p class="student-name">{student['first_name']} {student['last_name']}</p>
+                                <span class="student-admission">📋 {student['admission_number']}</span>
                             </div>
-                            <div class="stakeholder-section">
-                                <div class="info-label" style="margin-bottom: 6px;">Assigned Staff</div>
-                                {stakeholder_html}
+                        </div>
+                        <div class="student-info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Grade & Section</div>
+                                <div class="info-value">🎓 {student['grade']} - {student['section']}</div>
                             </div>
+                            <div class="info-item">
+                                <div class="info-label">Gender</div>
+                                <div class="info-value">{'👦' if student['gender'] == 'Male' else '👧' if student['gender'] == 'Female' else '🧑'} {student['gender']}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Guardian</div>
+                                <div class="info-value">👨‍👩‍👧 {guardian_name}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Contact</div>
+                                <div class="info-value">📞 {guardian_phone}</div>
+                            </div>
+                        </div>
+                        <div class="stakeholder-section">
+                            <div class="info-label" style="margin-bottom: 6px;">Assigned Staff</div>
+                            {stakeholder_html}
                         </div>
                     </div>
                     """
                     st.markdown(card_html, unsafe_allow_html=True)
-                    
-                    # Avatar button (positioned absolutely via CSS)
-                    st.markdown('<div class="avatar-btn-container">', unsafe_allow_html=True)
-                    if st.button(initials, key=f"avatar_{student_id}", help="Click to view full profile"):
-                        st.session_state['selected_student_profile'] = student_id
-                        st.rerun()
-                    st.markdown('</div>', unsafe_allow_html=True)
 
