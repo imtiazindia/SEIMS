@@ -1021,6 +1021,70 @@ with tab3:
             font-size: 0.8em;
             margin: 3px 3px 0 0;
         }
+        .view-profile-btn {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        .view-profile-btn:hover {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.1);
+        }
+        .view-profile-btn .tooltip {
+            visibility: hidden;
+            position: absolute;
+            bottom: 40px;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .view-profile-btn:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        /* Hide default streamlit button styling for icon buttons */
+        .icon-btn-wrapper button {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin-top: -48px !important;
+            margin-left: auto !important;
+            margin-right: 8px !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-height: 36px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative !important;
+            z-index: 20 !important;
+        }
+        .icon-btn-wrapper button:hover {
+            background: rgba(255,255,255,0.3) !important;
+        }
+        .icon-btn-wrapper button p {
+            font-size: 16px !important;
+            margin: 0 !important;
+        }
         </style>
         """, unsafe_allow_html=True)
         
@@ -1076,12 +1140,18 @@ with tab3:
                         <div class="info-label" style="margin-bottom: 6px;">Assigned Staff</div>
                         {stakeholder_html}
                     </div>
+                    <div class="view-profile-btn">
+                        🔍
+                        <span class="tooltip">View Full Profile</span>
+                    </div>
                 </div>
                 """
                 st.markdown(card_html, unsafe_allow_html=True)
                 
-                # View profile button
-                if st.button("View Full Profile", key=f"view_profile_{student['student_id']}", use_container_width=True):
+                # Invisible click target for the icon
+                st.markdown('<div class="icon-btn-wrapper">', unsafe_allow_html=True)
+                if st.button("🔍", key=f"view_profile_{student['student_id']}", help="View Full Profile"):
                     st.session_state['selected_student_profile'] = student['student_id']
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
 
