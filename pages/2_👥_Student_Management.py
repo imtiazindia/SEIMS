@@ -932,332 +932,360 @@ with tab3:
                 })
             return result
     
-    # Check if viewing a specific student profile
-    if st.session_state.get('selected_student_profile'):
-        student_id = st.session_state['selected_student_profile']
+    # Helper to render inline profile panel
+    def _render_inline_profile(student_id):
+        """Render an expandable profile panel for the selected student."""
         student = _get_full_student_profile(student_id)
-        
         if not student:
             st.error("Student not found.")
-            if st.button("← Back to Student List"):
-                st.session_state['selected_student_profile'] = None
-                st.rerun()
-        else:
-            # Back button
-            if st.button("← Back to Student List"):
-                st.session_state['selected_student_profile'] = None
-                st.rerun()
-            
-            st.markdown("---")
-            
-            # Student profile header
-            st.markdown(f"## {student['first_name']} {student['last_name']}")
-            if student['preferred_name']:
-                st.caption(f"Preferred name: {student['preferred_name']}")
-            st.caption(f"📋 Admission #: {student['admission_number']}")
-            
-            # Profile sections
-            with st.expander("📝 Basic Information", expanded=True):
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.write(f"**First Name:** {student['first_name']}")
-                    st.write(f"**Last Name:** {student['last_name']}")
-                    st.write(f"**Preferred Name:** {student['preferred_name'] or '—'}")
-                with col2:
-                    st.write(f"**Date of Birth:** {student['date_of_birth']}")
-                    st.write(f"**Gender:** {student['gender'] or '—'}")
-                    st.write(f"**Enrollment Date:** {student['enrollment_date']}")
-            
-            with st.expander("👨‍👩‍👧 Contact Information"):
-                contact = student['contact_info']
-                if contact:
-                    primary = contact.get('primary_guardian', {})
-                    if primary:
-                        st.markdown("**Primary Guardian**")
-                        st.write(f"- Name: {primary.get('full_name', '—')}")
-                        st.write(f"- Relationship: {primary.get('relationship', '—')}")
-                        st.write(f"- Phone: {primary.get('phone', '—')}")
-                        st.write(f"- Email: {primary.get('email', '—')}")
-                        st.write(f"- Language: {primary.get('language', '—')}")
-                        st.write(f"- Communication Pref: {primary.get('communication_pref', '—')}")
-                    address = contact.get('address', {})
-                    if address:
-                        st.markdown("**Address**")
-                        st.write(f"{address.get('line1', '')} {address.get('city_state_zip', '')}")
-                    emergency = contact.get('emergency_contacts', [])
-                    if emergency:
-                        st.markdown("**Emergency Contacts**")
-                        for i, ec in enumerate(emergency, 1):
-                            st.write(f"{i}. {ec.get('name', '—')} ({ec.get('relationship', '—')}) - {ec.get('phone', '—')}")
-                else:
-                    st.caption("No contact information provided.")
-            
-            with st.expander("🎓 Academic Information"):
-                academic = student['academic_info']
-                if academic:
-                    enrollment = academic.get('current_enrollment', {})
-                    st.write(f"**Grade Level:** {enrollment.get('grade', '—')}")
-                    st.write(f"**Section:** {enrollment.get('section', '—')}")
-                    st.write(f"**Class Teacher:** {enrollment.get('class_teacher', '—')}")
-                    st.write(f"**Previous School:** {enrollment.get('previous_school', '—')}")
-                    st.write(f"**Transfer Reason:** {enrollment.get('transfer_reason', '—')}")
-                    prefs = academic.get('schedule_preferences', {})
-                    if prefs:
-                        st.markdown("**Schedule Preferences**")
-                        if prefs.get('prefers_morning'):
-                            st.write("- Prefers morning sessions")
-                        if prefs.get('transport_assistance'):
-                            st.write("- Requires transportation assistance")
-                        if prefs.get('has_sibling'):
-                            st.write("- Has sibling in same school")
-                else:
-                    st.caption("No academic information provided.")
-            
-            with st.expander("🏥 Medical & Health"):
-                medical = student['medical_info']
-                if medical:
-                    conditions = medical.get('conditions', [])
-                    if conditions:
-                        st.markdown("**Medical Conditions**")
-                        for cond in conditions:
-                            st.write(f"- Condition: {cond.get('name', '—')} ({cond.get('severity', '—')})")
-                            st.write(f"  - Diagnosed by: {cond.get('diagnosed_by', '—')}")
-                            st.write(f"  - Treatment: {cond.get('treatment', '—')}")
-                    
-                    allergies = medical.get('allergies', [])
-                    if allergies:
-                        st.markdown("**Allergies**")
-                        for allergy in allergies:
-                            st.write(f"- Allergen: {allergy.get('allergen', '—')} ({allergy.get('severity', '—')})")
-                            st.write(f"  - Reaction: {allergy.get('reaction', '—')}")
-                    
-                    medications = medical.get('medications', [])
-                    if medications:
-                        st.markdown("**Medications**")
-                        for med in medications:
-                            st.write(f"- Medication: {med.get('name', '—')}")
-                            st.write(f"  - Dosage: {med.get('dosage', '—')}")
-                            st.write(f"  - Prescribed for: {med.get('reason', '—')}")
-                else:
-                    st.caption("No medical information provided.")
-            
-            with st.expander("🧠 Learning Profile"):
-                profile = student['learning_profile']
-                if profile:
-                    diag = profile.get('primary_diagnosis', '—')
-                    other_diag = profile.get('other_diagnosis', '')
-                    if diag == 'Other' and other_diag:
-                        diag = f"Other: {other_diag}"
-                    st.write(f"**Primary Diagnosis:** {diag}")
-                    st.write(f"**Diagnosis Date:** {profile.get('diagnosis_date', '—')}")
-                    st.write(f"**Diagnosing Agency:** {profile.get('diagnosing_agency', '—')}")
-                    st.write(f"**Report Reference #:** {profile.get('report_ref', '—')}")
-                    st.write(f"**Impact Level:** {profile.get('impact_level', '—')}")
-                    affected = profile.get('affected_areas', [])
-                    if affected:
-                        st.write(f"**Affected Areas:** {', '.join(affected)}")
-                else:
-                    st.caption("No learning profile provided.")
-            
-            st.markdown("---")
-            st.info("📚 **IEP Management** and **Session History** for this student will be available here in future updates.")
-    
-    else:
-        # Show the student cards grid
-        approved_students = _load_approved_students()
+            return
         
-        if not approved_students:
-            st.info("No approved students yet. Students will appear here after their registration is approved.")
-        else:
-            # Search/filter
-            search_term = st.text_input("🔍 Search students", placeholder="Search by name, admission # or grade...", key="profile_search")
-            
-            # Filter students based on search
-            if search_term:
-                search_lower = search_term.lower()
-                approved_students = [
-                    s for s in approved_students
-                    if search_lower in s['first_name'].lower()
-                    or search_lower in s['last_name'].lower()
-                    or search_lower in s['admission_number'].lower()
-                    or search_lower in s['grade'].lower()
-                ]
-            
-            st.caption(f"Showing {len(approved_students)} approved student(s) · Click avatar to view profile")
-            
-            # Check for profile query parameter
-            if "view_profile" in st.query_params:
-                try:
-                    profile_id = int(st.query_params["view_profile"])
-                    st.session_state['selected_student_profile'] = profile_id
-                    st.query_params.clear()
-                    st.rerun()
-                except (ValueError, TypeError):
-                    st.query_params.clear()
-            
-            # CSS for student cards with clickable avatar
-            st.markdown("""
-            <style>
-            .student-card {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border-radius: 16px;
-                padding: 20px;
-                margin: 10px 0 15px 0;
-                color: white;
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-                position: relative;
-                overflow: hidden;
-            }
-            .student-card::before {
-                content: '';
-                position: absolute;
-                top: -50%;
-                right: -50%;
-                width: 100%;
-                height: 100%;
-                background: rgba(255,255,255,0.1);
-                border-radius: 50%;
-            }
-            .student-card-header {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                margin-bottom: 12px;
-            }
-            .student-avatar-link {
-                text-decoration: none;
-                color: white;
-            }
-            .student-avatar {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                background: rgba(255,255,255,0.2);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 24px;
-                font-weight: bold;
-                border: 3px solid rgba(255,255,255,0.4);
-                flex-shrink: 0;
-                transition: all 0.2s ease;
-                cursor: pointer;
-            }
-            .student-avatar:hover {
-                background: rgba(255,255,255,0.35);
-                transform: scale(1.08);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            }
-            .student-name {
-                font-size: 1.2em;
-                font-weight: 600;
-                margin: 0;
-                line-height: 1.2;
-            }
-            .student-admission {
-                font-size: 0.85em;
-                opacity: 0.9;
-                background: rgba(255,255,255,0.15);
-                padding: 2px 8px;
-                border-radius: 12px;
-                display: inline-block;
-                margin-top: 4px;
-            }
-            .student-info-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                font-size: 0.85em;
-            }
-            .info-item {
-                background: rgba(255,255,255,0.1);
-                padding: 8px 10px;
-                border-radius: 8px;
-            }
-            .info-label {
-                font-size: 0.75em;
-                opacity: 0.8;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            .info-value {
-                font-weight: 500;
-                margin-top: 2px;
-            }
-            .stakeholder-section {
-                margin-top: 10px;
-                padding-top: 10px;
-                border-top: 1px solid rgba(255,255,255,0.2);
-            }
-            .stakeholder-tag {
-                display: inline-block;
-                background: rgba(255,255,255,0.2);
-                padding: 3px 10px;
-                border-radius: 12px;
-                font-size: 0.8em;
-                margin: 3px 3px 0 0;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-            
-            # Display cards in a 2-column grid
-            cols = st.columns(2)
-            
-            for idx, student in enumerate(approved_students):
-                with cols[idx % 2]:
-                    # Generate initials for avatar
-                    initials = f"{student['first_name'][0]}{student['last_name'][0]}".upper()
-                    
-                    # Build stakeholder tags
-                    stakeholders = []
-                    if student['class_teacher'] and student['class_teacher'] != '—':
-                        stakeholders.append(f"👨‍🏫 {student['class_teacher']}")
-                    
-                    stakeholder_html = "".join([
-                        f'<span class="stakeholder-tag">{s}</span>' for s in stakeholders
-                    ]) if stakeholders else '<span class="stakeholder-tag">👤 No assigned staff</span>'
-                    
-                    # Truncate long values
-                    guardian_name = student['guardian_name'][:20] + "..." if len(student['guardian_name']) > 20 else student['guardian_name']
-                    guardian_phone = student['guardian_phone'][:15] if student['guardian_phone'] else '—'
-                    
-                    student_id = student['student_id']
-                    
-                    # Card with clickable avatar (link-based)
-                    card_html = f"""
-                    <div class="student-card">
-                        <div class="student-card-header">
-                            <a href="?view_profile={student_id}" class="student-avatar-link" title="Click to view full profile">
-                                <div class="student-avatar">{initials}</div>
-                            </a>
-                            <div>
-                                <p class="student-name">{student['first_name']} {student['last_name']}</p>
-                                <span class="student-admission">📋 {student['admission_number']}</span>
-                            </div>
-                        </div>
-                        <div class="student-info-grid">
-                            <div class="info-item">
-                                <div class="info-label">Grade & Section</div>
-                                <div class="info-value">🎓 {student['grade']} - {student['section']}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Gender</div>
-                                <div class="info-value">{'👦' if student['gender'] == 'Male' else '👧' if student['gender'] == 'Female' else '🧑'} {student['gender']}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Guardian</div>
-                                <div class="info-value">👨‍👩‍👧 {guardian_name}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Contact</div>
-                                <div class="info-value">📞 {guardian_phone}</div>
-                            </div>
-                        </div>
-                        <div class="stakeholder-section">
-                            <div class="info-label" style="margin-bottom: 6px;">Assigned Staff</div>
-                            {stakeholder_html}
+        # Profile panel with styled container
+        st.markdown("""
+        <style>
+        .profile-panel {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #eee;
+            border: 2px solid #667eea;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+        .profile-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin: 0;
+            color: white;
+        }
+        .profile-subtitle {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        initials = f"{student['first_name'][0]}{student['last_name'][0]}".upper()
+        
+        # Close button
+        col_close = st.columns([6, 1])
+        with col_close[1]:
+            if st.button("✕ Close", key="close_profile", type="secondary"):
+                st.session_state['expanded_profile_id'] = None
+                st.rerun()
+        
+        # Profile header
+        st.markdown(f"""
+        <div class="profile-panel">
+            <div class="profile-header">
+                <div class="profile-avatar">{initials}</div>
+                <div>
+                    <p class="profile-title">{student['first_name']} {student['last_name']}</p>
+                    <p class="profile-subtitle">📋 {student['admission_number']} · {student['preferred_name'] or 'No preferred name'}</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Profile sections in expanders
+        with st.expander("📝 Basic Information", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write(f"**First Name:** {student['first_name']}")
+                st.write(f"**Last Name:** {student['last_name']}")
+                st.write(f"**Preferred Name:** {student['preferred_name'] or '—'}")
+            with col2:
+                st.write(f"**Date of Birth:** {student['date_of_birth']}")
+                st.write(f"**Gender:** {student['gender'] or '—'}")
+                st.write(f"**Enrollment Date:** {student['enrollment_date']}")
+        
+        with st.expander("👨‍👩‍👧 Contact Information"):
+            contact = student['contact_info']
+            if contact:
+                primary = contact.get('primary_guardian', {})
+                if primary:
+                    st.markdown("**Primary Guardian**")
+                    st.write(f"- Name: {primary.get('full_name', '—')}")
+                    st.write(f"- Relationship: {primary.get('relationship', '—')}")
+                    st.write(f"- Phone: {primary.get('phone', '—')}")
+                    st.write(f"- Email: {primary.get('email', '—')}")
+                address = contact.get('address', {})
+                if address:
+                    st.markdown("**Address**")
+                    st.write(f"{address.get('line1', '')} {address.get('city_state_zip', '')}")
+                emergency = contact.get('emergency_contacts', [])
+                if emergency:
+                    st.markdown("**Emergency Contacts**")
+                    for i, ec in enumerate(emergency, 1):
+                        st.write(f"{i}. {ec.get('name', '—')} ({ec.get('relationship', '—')}) - {ec.get('phone', '—')}")
+            else:
+                st.caption("No contact information provided.")
+        
+        with st.expander("🎓 Academic Information"):
+            academic = student['academic_info']
+            if academic:
+                enrollment = academic.get('current_enrollment', {})
+                st.write(f"**Grade Level:** {enrollment.get('grade', '—')}")
+                st.write(f"**Section:** {enrollment.get('section', '—')}")
+                st.write(f"**Class Teacher:** {enrollment.get('class_teacher', '—')}")
+                st.write(f"**Previous School:** {enrollment.get('previous_school', '—')}")
+            else:
+                st.caption("No academic information provided.")
+        
+        with st.expander("🏥 Medical & Health"):
+            medical = student['medical_info']
+            if medical:
+                conditions = medical.get('conditions', [])
+                if conditions:
+                    for cond in conditions:
+                        st.write(f"• {cond.get('name', '—')} ({cond.get('severity', '—')})")
+                allergies = medical.get('allergies', [])
+                if allergies:
+                    st.markdown("**Allergies:**")
+                    for allergy in allergies:
+                        st.write(f"• {allergy.get('allergen', '—')} ({allergy.get('severity', '—')})")
+                medications = medical.get('medications', [])
+                if medications:
+                    st.markdown("**Medications:**")
+                    for med in medications:
+                        st.write(f"• {med.get('name', '—')} - {med.get('dosage', '—')}")
+            else:
+                st.caption("No medical information provided.")
+        
+        with st.expander("🧠 Learning Profile"):
+            profile = student['learning_profile']
+            if profile:
+                diag = profile.get('primary_diagnosis', '—')
+                st.write(f"**Primary Diagnosis:** {diag}")
+                st.write(f"**Impact Level:** {profile.get('impact_level', '—')}")
+                affected = profile.get('affected_areas', [])
+                if affected:
+                    st.write(f"**Affected Areas:** {', '.join(affected)}")
+            else:
+                st.caption("No learning profile provided.")
+        
+        st.info("📚 **IEP Management** and **Session History** coming soon.")
+        st.markdown("---")
+    
+    # Check for query parameter to expand profile
+    if "view_profile" in st.query_params:
+        try:
+            profile_id = int(st.query_params["view_profile"])
+            st.session_state['expanded_profile_id'] = profile_id
+            st.query_params.clear()
+            st.rerun()
+        except (ValueError, TypeError):
+            st.query_params.clear()
+    
+    # Show expanded profile panel if one is selected
+    if st.session_state.get('expanded_profile_id'):
+        _render_inline_profile(st.session_state['expanded_profile_id'])
+    
+    # Always show the student cards grid below
+    approved_students = _load_approved_students()
+    
+    if not approved_students:
+        st.info("No approved students yet. Students will appear here after their registration is approved.")
+    else:
+        # Search/filter
+        search_term = st.text_input("🔍 Search students", placeholder="Search by name, admission # or grade...", key="profile_search")
+        
+        # Filter students based on search
+        if search_term:
+            search_lower = search_term.lower()
+            approved_students = [
+                s for s in approved_students
+                if search_lower in s['first_name'].lower()
+                or search_lower in s['last_name'].lower()
+                or search_lower in s['admission_number'].lower()
+                or search_lower in s['grade'].lower()
+            ]
+        
+        st.caption(f"Showing {len(approved_students)} approved student(s) · Click avatar to view profile")
+        
+        # CSS for student cards with clickable avatar
+        st.markdown("""
+        <style>
+        .student-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 10px 0 15px 0;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .student-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        .student-card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+        .student-avatar-link {
+            text-decoration: none;
+            color: white;
+        }
+        .student-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 3px solid rgba(255,255,255,0.4);
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .student-avatar:hover {
+            background: rgba(255,255,255,0.35);
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+        .student-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .student-admission {
+            font-size: 0.85em;
+            opacity: 0.9;
+            background: rgba(255,255,255,0.15);
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .student-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.85em;
+        }
+        .info-item {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 10px;
+            border-radius: 8px;
+        }
+        .info-label {
+            font-size: 0.75em;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .info-value {
+            font-weight: 500;
+            margin-top: 2px;
+        }
+        .stakeholder-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        .stakeholder-tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin: 3px 3px 0 0;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # Display cards in a 2-column grid
+        cols = st.columns(2)
+        
+        for idx, student in enumerate(approved_students):
+            with cols[idx % 2]:
+                # Generate initials for avatar
+                initials = f"{student['first_name'][0]}{student['last_name'][0]}".upper()
+                
+                # Build stakeholder tags
+                stakeholders = []
+                if student['class_teacher'] and student['class_teacher'] != '—':
+                    stakeholders.append(f"👨‍🏫 {student['class_teacher']}")
+                
+                stakeholder_html = "".join([
+                    f'<span class="stakeholder-tag">{s}</span>' for s in stakeholders
+                ]) if stakeholders else '<span class="stakeholder-tag">👤 No assigned staff</span>'
+                
+                # Truncate long values
+                guardian_name = student['guardian_name'][:20] + "..." if len(student['guardian_name']) > 20 else student['guardian_name']
+                guardian_phone = student['guardian_phone'][:15] if student['guardian_phone'] else '—'
+                
+                student_id = student['student_id']
+                
+                # Card with clickable avatar (link-based)
+                card_html = f"""
+                <div class="student-card">
+                    <div class="student-card-header">
+                        <a href="?view_profile={student_id}" class="student-avatar-link" title="Click to view full profile">
+                            <div class="student-avatar">{initials}</div>
+                        </a>
+                        <div>
+                            <p class="student-name">{student['first_name']} {student['last_name']}</p>
+                            <span class="student-admission">📋 {student['admission_number']}</span>
                         </div>
                     </div>
-                    """
-                    st.markdown(card_html, unsafe_allow_html=True)
-
+                    <div class="student-info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Grade & Section</div>
+                            <div class="info-value">🎓 {student['grade']} - {student['section']}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Gender</div>
+                            <div class="info-value">{'👦' if student['gender'] == 'Male' else '👧' if student['gender'] == 'Female' else '🧑'} {student['gender']}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Guardian</div>
+                            <div class="info-value">👨‍👩‍👧 {guardian_name}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Contact</div>
+                            <div class="info-value">📞 {guardian_phone}</div>
+                        </div>
+                    </div>
+                    <div class="stakeholder-section">
+                        <div class="info-label" style="margin-bottom: 6px;">Assigned Staff</div>
+                        {stakeholder_html}
+                    </div>
+                </div>
+                """
+                st.markdown(card_html, unsafe_allow_html=True)
