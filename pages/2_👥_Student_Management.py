@@ -877,9 +877,211 @@ with tab2:
 
 with tab3:
     st.subheader("Student Profiles")
-    st.info(
-        "Student profile management (including IEP links and session history) "
-        "will be implemented here in a later phase."
-    )
-
+    
+    # Load approved students
+    def _load_approved_students():
+        with get_db_session() as session:
+            students = session.query(Student).filter(
+                Student.registration_status == 'approved'
+            ).order_by(Student.first_name, Student.last_name).all()
+            
+            result = []
+            for s in students:
+                # Get academic info for teacher/stakeholder details
+                acad = s.academic_info or {}
+                enrollment = acad.get('current_enrollment', {})
+                contact = s.contact_info or {}
+                primary_guardian = contact.get('primary_guardian', {})
+                
+                result.append({
+                    'student_id': s.student_id,
+                    'admission_number': s.admission_number or '—',
+                    'first_name': s.first_name,
+                    'last_name': s.last_name,
+                    'preferred_name': s.preferred_name,
+                    'grade': s.grade or enrollment.get('grade', '—'),
+                    'section': s.section or enrollment.get('section', '—'),
+                    'guardian_name': primary_guardian.get('full_name', '—'),
+                    'guardian_phone': primary_guardian.get('phone', '—'),
+                    'guardian_email': primary_guardian.get('email', '—'),
+                    'class_teacher': enrollment.get('class_teacher', '—'),
+                    'gender': s.gender or '—',
+                })
+            return result
+    
+    approved_students = _load_approved_students()
+    
+    if not approved_students:
+        st.info("No approved students yet. Students will appear here after their registration is approved.")
+    else:
+        # Search/filter
+        search_term = st.text_input("🔍 Search students", placeholder="Search by name, admission # or grade...")
+        
+        # Filter students based on search
+        if search_term:
+            search_lower = search_term.lower()
+            approved_students = [
+                s for s in approved_students
+                if search_lower in s['first_name'].lower()
+                or search_lower in s['last_name'].lower()
+                or search_lower in s['admission_number'].lower()
+                or search_lower in s['grade'].lower()
+            ]
+        
+        st.caption(f"Showing {len(approved_students)} approved student(s)")
+        
+        # CSS for student cards
+        st.markdown("""
+        <style>
+        .student-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 10px 0;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .student-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        .student-card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+        .student-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 3px solid rgba(255,255,255,0.4);
+            flex-shrink: 0;
+        }
+        .student-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .student-admission {
+            font-size: 0.85em;
+            opacity: 0.9;
+            background: rgba(255,255,255,0.15);
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .student-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.85em;
+        }
+        .info-item {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 10px;
+            border-radius: 8px;
+        }
+        .info-label {
+            font-size: 0.75em;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .info-value {
+            font-weight: 500;
+            margin-top: 2px;
+        }
+        .stakeholder-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        .stakeholder-tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin: 3px 3px 0 0;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # Display cards in a 2-column grid
+        cols = st.columns(2)
+        
+        for idx, student in enumerate(approved_students):
+            with cols[idx % 2]:
+                # Generate initials for avatar
+                initials = f"{student['first_name'][0]}{student['last_name'][0]}".upper()
+                
+                # Build stakeholder tags
+                stakeholders = []
+                if student['class_teacher'] and student['class_teacher'] != '—':
+                    stakeholders.append(f"👨‍🏫 {student['class_teacher']}")
+                
+                stakeholder_html = "".join([
+                    f'<span class="stakeholder-tag">{s}</span>' for s in stakeholders
+                ]) if stakeholders else '<span class="stakeholder-tag">👤 No assigned staff</span>'
+                
+                # Truncate long values
+                guardian_name = student['guardian_name'][:20] + "..." if len(student['guardian_name']) > 20 else student['guardian_name']
+                guardian_phone = student['guardian_phone'][:15] if student['guardian_phone'] else '—'
+                
+                card_html = f"""
+                <div class="student-card">
+                    <div class="student-card-header">
+                        <div class="student-avatar">{initials}</div>
+                        <div>
+                            <p class="student-name">{student['first_name']} {student['last_name']}</p>
+                            <span class="student-admission">📋 {student['admission_number']}</span>
+                        </div>
+                    </div>
+                    <div class="student-info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Grade & Section</div>
+                            <div class="info-value">🎓 {student['grade']} - {student['section']}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Gender</div>
+                            <div class="info-value">{'👦' if student['gender'] == 'Male' else '👧' if student['gender'] == 'Female' else '🧑'} {student['gender']}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Guardian</div>
+                            <div class="info-value">👨‍👩‍👧 {guardian_name}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Contact</div>
+                            <div class="info-value">📞 {guardian_phone}</div>
+                        </div>
+                    </div>
+                    <div class="stakeholder-section">
+                        <div class="info-label" style="margin-bottom: 6px;">Assigned Staff</div>
+                        {stakeholder_html}
+                    </div>
+                </div>
+                """
+                st.markdown(card_html, unsafe_allow_html=True)
+                
+                # View profile button
+                if st.button("View Full Profile", key=f"view_profile_{student['student_id']}", use_container_width=True):
+                    st.session_state['selected_student_profile'] = student['student_id']
+                    st.rerun()
 
