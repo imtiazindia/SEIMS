@@ -607,6 +607,7 @@ with tab2:
                                 "Prescribed for", value=medication.get("reason", "")
                             )
 
+                    st.markdown("---")
                     col_buttons = st.columns(2)
                     with col_buttons[0]:
                         back = st.form_submit_button("◀ Back to Step 3")
