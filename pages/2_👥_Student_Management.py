@@ -1122,7 +1122,7 @@ with tab3:
                 or search_lower in s['grade'].lower()
             ]
         
-        st.caption(f"Showing {len(approved_students)} approved student(s) · Click avatar to view profile")
+        st.caption(f"📌 {len(approved_students)} student(s) · Click avatar to expand profile")
         
         # CSS for student cards with clickable avatar
         st.markdown("""
