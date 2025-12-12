@@ -23,7 +23,7 @@ class User(Base):
     last_login = Column(DateTime, nullable=True)
     
     # Relationships
-    created_students = relationship("Student", back_populates="created_by_user")
+    created_students = relationship("Student", back_populates="created_by_user", foreign_keys="[Student.created_by]")
     created_ieps = relationship("IEP", back_populates="created_by_user")
     sessions = relationship("Session", back_populates="teacher")
 
